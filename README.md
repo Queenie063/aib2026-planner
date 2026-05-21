@@ -1,21 +1,23 @@
 # AIB 2026 Personal Planner
 
-一个基于 AIB 2026 conference program 制作的静态网页工具，支持：
+A static web app built from the AIB 2026 conference program. It helps attendees browse the program, select sessions and papers, detect schedule conflicts, and export a personal plan.
 
-- 按日期、track、房间、时间、session 类型筛选
-- 勾选 session
-- 勾选 paper，并显示所属 session
-- 高亮已选 paper 所在 session
-- 自动检测时间冲突
-- 导出个人日程为 Excel 和打印版 PDF
+## Features
+
+- Filter by date, track, room, time, and session type
+- Select full sessions
+- Select individual papers and show their parent session
+- Highlight sessions that contain selected papers
+- Detect time conflicts automatically
+- Export a personal plan to Excel and print-friendly PDF
 
 ## Files
 
-- `index.html`: GitHub Pages 入口页
-- `conference-planner.html`: 主应用页面
-- `planner-data.js`: 解析后的会议数据
+- `index.html`: GitHub Pages entry page
+- `conference-planner.html`: main application page
+- `planner-data.js`: parsed conference data
 
 ## Notes
 
-- 当前选择结果保存在每位用户自己的浏览器本地，不会自动同步给其他人。
-- 这是一个纯静态网站，适合通过 GitHub Pages 部署。
+- Selections are stored only in each user's local browser storage and are not shared automatically with other users.
+- This is a fully static site and is well suited for deployment with GitHub Pages.
