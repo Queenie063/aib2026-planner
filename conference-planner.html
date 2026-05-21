@@ -1,0 +1,1224 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AIB 2026 Personal Planner</title>
+  <style>
+    :root {
+      --bg: #f6f1e8;
+      --panel: rgba(255,255,255,0.86);
+      --panel-strong: #fffdf9;
+      --ink: #1d2b2a;
+      --muted: #5f6f6d;
+      --line: rgba(25, 56, 52, 0.14);
+      --accent: #0e6b61;
+      --accent-2: #d17f39;
+      --accent-soft: rgba(14, 107, 97, 0.1);
+      --selected: rgba(209, 127, 57, 0.16);
+      --shadow: 0 18px 40px rgba(38, 53, 48, 0.12);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(209,127,57,0.18), transparent 30%),
+        radial-gradient(circle at 85% 10%, rgba(14,107,97,0.16), transparent 24%),
+        linear-gradient(180deg, #f9f4eb 0%, #f3ece1 100%);
+      min-height: 100vh;
+    }
+
+    .shell {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: 24px;
+      width: min(1500px, calc(100% - 32px));
+      margin: 24px auto;
+      align-items: start;
+    }
+
+    .main, .sidebar {
+      background: var(--panel);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.7);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .main { overflow: hidden; }
+    .hero {
+      padding: 28px 30px 20px;
+      background:
+        linear-gradient(135deg, rgba(14,107,97,0.95), rgba(18,80,73,0.9)),
+        linear-gradient(45deg, rgba(255,255,255,0.08), transparent);
+      color: #f6f6f2;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 860px;
+      color: rgba(246, 246, 242, 0.85);
+      line-height: 1.55;
+    }
+
+    .toolbar {
+      padding: 20px 24px 24px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.54), rgba(255,255,255,0.2));
+    }
+
+    .search-row, .filters-row, .stats-row {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .search-row { grid-template-columns: minmax(0, 1.6fr) repeat(2, minmax(0, 0.7fr)); }
+    .filters-row { grid-template-columns: repeat(3, minmax(0, 1fr)) auto auto; }
+    .stats-row { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 0; }
+
+    input, select, button {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 14px;
+      background: rgba(255,255,255,0.84);
+      color: var(--ink);
+    }
+
+    input:focus, select:focus {
+      outline: 2px solid rgba(14,107,97,0.18);
+      border-color: rgba(14,107,97,0.4);
+    }
+
+    button {
+      cursor: pointer;
+      transition: transform .18s ease, background-color .18s ease, border-color .18s ease;
+      font-weight: 600;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    .primary-btn {
+      background: var(--accent);
+      color: white;
+      border-color: transparent;
+    }
+    .soft-btn {
+      background: rgba(255,255,255,0.72);
+    }
+
+    .stat {
+      background: rgba(255,255,255,0.68);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 16px;
+    }
+
+    .stat .label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .stat .value {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .content {
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .day-section {
+      display: grid;
+      gap: 12px;
+    }
+
+    .day-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 8px 4px;
+    }
+
+    .day-header h2 {
+      margin: 0;
+      font-size: 24px;
+      color: #0e4f48;
+    }
+
+    .day-header span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .session-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 18px 16px;
+      background: rgba(255,255,255,0.82);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .session-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 28px rgba(31, 44, 40, 0.08);
+    }
+
+    .session-card.selected {
+      border-color: rgba(209,127,57,0.55);
+      background: linear-gradient(180deg, rgba(255,247,239,0.95), rgba(255,255,255,0.9));
+      box-shadow: 0 14px 30px rgba(209,127,57,0.12);
+    }
+
+    .session-card.paper-focus {
+      border-color: rgba(14,107,97,0.52);
+      box-shadow: 0 14px 30px rgba(14,107,97,0.12);
+    }
+
+    .session-card.dimmed {
+      opacity: 0.36;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .session-top {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 14px;
+      align-items: start;
+      margin-bottom: 10px;
+    }
+
+    .pickbox {
+      margin-top: 2px;
+      width: 22px;
+      height: 22px;
+      accent-color: var(--accent-2);
+    }
+
+    .session-title {
+      margin: 0;
+      font-size: 21px;
+      line-height: 1.25;
+    }
+
+    .session-code {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: #0c5a52;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .pill.room {
+      background: rgba(209,127,57,0.12);
+      color: #945320;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .meta {
+      border-radius: 16px;
+      padding: 12px;
+      background: rgba(246, 241, 232, 0.8);
+    }
+
+    .meta b {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .meta span {
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .session-desc, .session-people, .session-subitems {
+      margin-top: 14px;
+    }
+
+    .section-label {
+      display: inline-block;
+      margin-bottom: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .session-desc p, .session-people li, .subitem li {
+      margin: 0;
+      line-height: 1.6;
+      color: #354644;
+      font-size: 14px;
+    }
+
+    .session-people ul, .subitem ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .subitem {
+      border-left: 3px solid rgba(14,107,97,0.18);
+      padding-left: 12px;
+      margin-bottom: 10px;
+    }
+
+    .subitem.selected {
+      border-left-color: rgba(209,127,57,0.6);
+      background: rgba(255, 248, 240, 0.75);
+      border-radius: 14px;
+      padding: 10px 12px 10px 14px;
+    }
+
+    .subitem-head {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: start;
+    }
+
+    .subpick {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      accent-color: var(--accent);
+    }
+
+    .subitem h4 {
+      margin: 0 0 6px;
+      font-size: 15px;
+      color: #153937;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 48px 18px;
+      color: var(--muted);
+      border: 1px dashed rgba(25, 56, 52, 0.22);
+      border-radius: 22px;
+      background: rgba(255,255,255,0.42);
+    }
+
+    .sidebar {
+      padding: 22px;
+      position: sticky;
+      top: 24px;
+      max-height: calc(100vh - 48px);
+      overflow: auto;
+    }
+
+    .sidebar h2 {
+      margin: 0 0 6px;
+      font-size: 24px;
+    }
+
+    .sidebar p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .sidebar-actions {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .conflict-panel {
+      margin-bottom: 18px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .conflict-card {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 245, 240, 0.95);
+      border: 1px solid rgba(209,127,57,0.3);
+    }
+
+    .conflict-card h3 {
+      margin: 0 0 6px;
+      font-size: 15px;
+      color: #8d4f1f;
+    }
+
+    .conflict-card p {
+      margin: 0 0 6px;
+      font-size: 13px;
+      color: #6f5d53;
+      line-height: 1.5;
+    }
+
+    .conflict-card ul {
+      margin: 0;
+      padding-left: 18px;
+      color: #3d3a36;
+    }
+
+    .conflict-card li {
+      margin: 0 0 4px;
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    .mini-stat {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .mini-card {
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(246, 241, 232, 0.86);
+      border: 1px solid var(--line);
+    }
+
+    .mini-card strong {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+
+    .my-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .my-item {
+      padding: 14px;
+      border-radius: 18px;
+      background: var(--panel-strong);
+      border: 1px solid var(--line);
+    }
+
+    .my-item h3 {
+      margin: 0 0 6px;
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .my-item p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .my-item .tiny {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #8a5c33;
+    }
+
+    .my-item .paper {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed rgba(25, 56, 52, 0.18);
+      color: #29413d;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 1180px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { position: static; max-height: none; }
+    }
+
+    @media (max-width: 840px) {
+      .search-row, .filters-row, .stats-row, .meta-grid { grid-template-columns: 1fr; }
+      .session-top { grid-template-columns: auto 1fr; }
+      .pill-row { grid-column: 1 / -1; justify-content: flex-start; }
+      .hero, .toolbar, .content, .sidebar { padding-left: 16px; padding-right: 16px; }
+      .shell { width: min(100%, calc(100% - 16px)); margin: 8px auto 20px; gap: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <main class="main">
+      <section class="hero">
+        <h1>AIB 2026 个人参会规划</h1>
+        <p>把原始日程拆成可搜索、可筛选、可勾选的卡片。你可以按日期、主题、房间或关键词筛选，并把想参加的 session 勾出来，页面会自动汇总成你自己的行程表。</p>
+      </section>
+
+      <section class="toolbar">
+        <div class="search-row">
+          <input id="searchInput" type="search" placeholder="搜关键词、作者、论文题目、session 标题、房间、track" />
+          <select id="dayFilter"></select>
+          <select id="trackFilter"></select>
+        </div>
+        <div class="filters-row">
+          <select id="roomFilter"></select>
+          <select id="timeFilter"></select>
+          <select id="typeFilter"></select>
+          <button id="selectedOnlyBtn" class="soft-btn" type="button">只看已选</button>
+          <button id="paperFocusBtn" class="soft-btn" type="button">高亮已选 paper 所在 session</button>
+          <button id="resetBtn" class="soft-btn" type="button">重置筛选</button>
+        </div>
+        <div class="stats-row">
+          <div class="stat"><span class="label">总场次</span><span id="totalCount" class="value">0</span></div>
+          <div class="stat"><span class="label">当前结果</span><span id="visibleCount" class="value">0</span></div>
+          <div class="stat"><span class="label">已选场次</span><span id="pickedCount" class="value">0</span></div>
+          <div class="stat"><span class="label">涉及日期</span><span id="pickedDays" class="value">0</span></div>
+        </div>
+      </section>
+
+      <section id="content" class="content"></section>
+    </main>
+
+    <aside class="sidebar">
+      <h2>我的日程</h2>
+      <p>勾选后的内容会自动保存在当前浏览器本地。下次打开同一个文件，已选结果还在。</p>
+      <div class="mini-stat">
+        <div class="mini-card"><strong id="miniPicked">0</strong><span>已选 session / paper</span></div>
+        <div class="mini-card"><strong id="miniTracks">0</strong><span>涉及 track</span></div>
+      </div>
+      <div class="sidebar-actions">
+        <button id="copyBtn" class="primary-btn" type="button">复制我选中的日程</button>
+        <button id="downloadExcelBtn" class="soft-btn" type="button">导出 Excel</button>
+        <button id="downloadPdfBtn" class="soft-btn" type="button">导出 PDF</button>
+        <button id="clearBtn" class="soft-btn" type="button">清空已选</button>
+      </div>
+      <div id="conflictPanel" class="conflict-panel"></div>
+      <div id="myList" class="my-list"></div>
+    </aside>
+  </div>
+
+  <script src="./planner-data.js"></script>
+  <script>
+    const data = window.AIB_PROGRAM_DATA || { sessions: [], days: [], tracks: [], rooms: [] };
+    const STORAGE_KEY = 'aib2026-picked-items-v2';
+    const LEGACY_STORAGE_KEY = 'aib2026-picked-sessions-v1';
+    const savedState = loadSavedSelection();
+    const state = {
+      selectedSessions: new Set(savedState.sessions || []),
+      selectedPapers: new Set(savedState.papers || []),
+      selectedOnly: false,
+      paperFocus: false,
+      search: '',
+      day: '',
+      track: '',
+      room: '',
+      time: '',
+      type: ''
+    };
+
+    const els = {
+      searchInput: document.getElementById('searchInput'),
+      dayFilter: document.getElementById('dayFilter'),
+      trackFilter: document.getElementById('trackFilter'),
+      roomFilter: document.getElementById('roomFilter'),
+      timeFilter: document.getElementById('timeFilter'),
+      typeFilter: document.getElementById('typeFilter'),
+      selectedOnlyBtn: document.getElementById('selectedOnlyBtn'),
+      paperFocusBtn: document.getElementById('paperFocusBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      totalCount: document.getElementById('totalCount'),
+      visibleCount: document.getElementById('visibleCount'),
+      pickedCount: document.getElementById('pickedCount'),
+      pickedDays: document.getElementById('pickedDays'),
+      content: document.getElementById('content'),
+      myList: document.getElementById('myList'),
+      conflictPanel: document.getElementById('conflictPanel'),
+      miniPicked: document.getElementById('miniPicked'),
+      miniTracks: document.getElementById('miniTracks'),
+      copyBtn: document.getElementById('copyBtn'),
+      downloadExcelBtn: document.getElementById('downloadExcelBtn'),
+      downloadPdfBtn: document.getElementById('downloadPdfBtn'),
+      clearBtn: document.getElementById('clearBtn')
+    };
+
+    const sessions = data.sessions || [];
+    const timeOptions = [...new Set(sessions.map(s => s.time).filter(Boolean))].sort();
+    const typeOptions = [...new Set(sessions.map(s => s.sessionLabel).filter(Boolean))].sort();
+
+    function fillSelect(select, placeholder, options) {
+      select.innerHTML = '';
+      const blank = document.createElement('option');
+      blank.value = '';
+      blank.textContent = placeholder;
+      select.appendChild(blank);
+      options.forEach(option => {
+        const el = document.createElement('option');
+        el.value = option;
+        el.textContent = option;
+        select.appendChild(el);
+      });
+    }
+
+    function loadSavedSelection() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return {
+            sessions: Array.isArray(parsed.sessions) ? parsed.sessions : [],
+            papers: Array.isArray(parsed.papers) ? parsed.papers : []
+          };
+        }
+      } catch {}
+
+      try {
+        const legacy = JSON.parse(localStorage.getItem(LEGACY_STORAGE_KEY) || '[]');
+        return { sessions: Array.isArray(legacy) ? legacy : [], papers: [] };
+      } catch {
+        return { sessions: [], papers: [] };
+      }
+    }
+
+    function persistSelection() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        sessions: [...state.selectedSessions],
+        papers: [...state.selectedPapers]
+      }));
+    }
+
+    function normalize(text) {
+      return (text || '').toLowerCase().trim();
+    }
+
+    function paperKey(session, item) {
+      return session.id + '::' + item.title;
+    }
+
+    function isSessionSelected(session) {
+      return state.selectedSessions.has(session.id);
+    }
+
+    function isPaperSelected(session, item) {
+      return state.selectedPapers.has(paperKey(session, item));
+    }
+
+    function hasSelectedPaper(session) {
+      return (session.subitems || []).some(item => isPaperSelected(session, item));
+    }
+
+    function isPaperFocusSession(session) {
+      return state.paperFocus && hasSelectedPaper(session);
+    }
+
+    function matches(session) {
+      if (state.selectedOnly && !isSessionSelected(session) && !hasSelectedPaper(session)) return false;
+      if (state.day && session.day !== state.day) return false;
+      if (state.track && session.track !== state.track) return false;
+      if (state.room && session.room !== state.room) return false;
+      if (state.time && session.time !== state.time) return false;
+      if (state.type && session.sessionLabel !== state.type) return false;
+      if (state.search) {
+        const haystack = normalize(session.searchText);
+        if (!haystack.includes(state.search)) return false;
+      }
+      return true;
+    }
+
+    function groupedVisibleSessions() {
+      const visible = sessions.filter(matches);
+      const groups = new Map();
+      visible.forEach(session => {
+        if (!groups.has(session.day)) groups.set(session.day, []);
+        groups.get(session.day).push(session);
+      });
+      return { visible, groups };
+    }
+
+    function createMeta(label, value) {
+      const div = document.createElement('div');
+      div.className = 'meta';
+      div.innerHTML = '<b>' + label + '</b><span>' + (value || '—') + '</span>';
+      return div;
+    }
+
+    function renderContent() {
+      const { visible, groups } = groupedVisibleSessions();
+      els.visibleCount.textContent = visible.length;
+      els.totalCount.textContent = sessions.length;
+      els.content.innerHTML = '';
+
+      if (!visible.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = '没有匹配到结果。可以换个关键词，或者重置筛选。';
+        els.content.appendChild(empty);
+        return;
+      }
+
+      groups.forEach((items, day) => {
+        const section = document.createElement('section');
+        section.className = 'day-section';
+
+        const header = document.createElement('div');
+        header.className = 'day-header';
+        header.innerHTML = '<h2>' + day + '</h2><span>' + items.length + ' 场</span>';
+        section.appendChild(header);
+
+        items.forEach(session => {
+          const card = document.createElement('article');
+          const selectedState = isSessionSelected(session) || hasSelectedPaper(session);
+          const focusState = isPaperFocusSession(session);
+          const dimmedState = state.paperFocus && !focusState;
+          card.className = 'session-card' +
+            (selectedState ? ' selected' : '') +
+            (focusState ? ' paper-focus' : '') +
+            (dimmedState ? ' dimmed' : '');
+
+          const top = document.createElement('div');
+          top.className = 'session-top';
+
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.className = 'pickbox';
+          checkbox.checked = isSessionSelected(session);
+          checkbox.addEventListener('change', () => toggleSessionSelection(session.id));
+
+          const titleWrap = document.createElement('div');
+          const code = session.sessionNumber ? 'Session# ' + session.sessionNumber : session.id;
+          titleWrap.innerHTML = '<h3 class="session-title">' + escapeHtml(session.title) + '</h3><div class="session-code">' + escapeHtml(code) + '</div>';
+
+          const pills = document.createElement('div');
+          pills.className = 'pill-row';
+          [session.time && { text: session.time }, session.track && { text: session.track }, session.room && { text: session.room, cls: 'room' }]
+            .filter(Boolean)
+            .forEach(item => {
+              const pill = document.createElement('span');
+              pill.className = 'pill' + (item.cls ? ' ' + item.cls : '');
+              pill.textContent = item.text;
+              pills.appendChild(pill);
+            });
+
+          top.appendChild(checkbox);
+          top.appendChild(titleWrap);
+          top.appendChild(pills);
+          card.appendChild(top);
+
+          const metaGrid = document.createElement('div');
+          metaGrid.className = 'meta-grid';
+          metaGrid.appendChild(createMeta('Date', session.day));
+          metaGrid.appendChild(createMeta('Time Block', session.timeBlock));
+          metaGrid.appendChild(createMeta('Session Type', session.sessionLabel));
+          metaGrid.appendChild(createMeta('Room', session.room || 'TBD'));
+          card.appendChild(metaGrid);
+
+          if (session.description.length) {
+            const desc = document.createElement('div');
+            desc.className = 'session-desc';
+            desc.innerHTML = '<span class="section-label">Description</span>' + session.description.map(p => '<p>' + escapeHtml(p) + '</p>').join('');
+            card.appendChild(desc);
+          }
+
+          if (session.people.length) {
+            const people = document.createElement('div');
+            people.className = 'session-people';
+            people.innerHTML = '<span class="section-label">People</span><ul>' + session.people.slice(0, 12).map(p => '<li>' + escapeHtml(p) + '</li>').join('') + '</ul>';
+            card.appendChild(people);
+          }
+
+          if (session.subitems.length) {
+            const subitems = document.createElement('div');
+            subitems.className = 'session-subitems';
+            subitems.innerHTML = '<span class="section-label">Papers / Panels / Subsections</span>';
+            session.subitems.slice(0, 8).forEach(item => {
+              const box = document.createElement('div');
+              const picked = isPaperSelected(session, item);
+              box.className = 'subitem' + (picked ? ' selected' : '');
+              const subId = 'paper-' + escapeHtml(session.id + '-' + item.title).replace(/[^a-zA-Z0-9_-]/g, '');
+              box.innerHTML =
+                '<div class="subitem-head">' +
+                  '<input id="' + subId + '" type="checkbox" class="subpick"' + (picked ? ' checked' : '') + ' />' +
+                  '<div><h4>' + escapeHtml(item.title) + '</h4>' + (item.lines.length ? '<ul>' + item.lines.slice(0, 8).map(line => '<li>' + escapeHtml(line) + '</li>').join('') + '</ul>' : '') + '</div>' +
+                '</div>';
+              box.querySelector('.subpick').addEventListener('change', () => togglePaperSelection(session, item));
+              subitems.appendChild(box);
+            });
+            card.appendChild(subitems);
+          }
+
+          section.appendChild(card);
+        });
+
+        els.content.appendChild(section);
+      });
+    }
+
+    function selectedSessions() {
+      return sessions.filter(session => isSessionSelected(session));
+    }
+
+    function selectedPaperEntries() {
+      const entries = [];
+      sessions.forEach(session => {
+        (session.subitems || []).forEach(item => {
+          if (isPaperSelected(session, item)) {
+            entries.push({ session, item });
+          }
+        });
+      });
+      return entries;
+    }
+
+    function selectedAgendaItems() {
+      const sessionEntries = selectedSessions().map(session => ({
+        kind: 'session',
+        title: session.title,
+        sessionTitle: session.title,
+        day: session.day,
+        time: session.time || session.timeBlock,
+        track: session.track,
+        room: session.room,
+        sessionLabel: session.sessionLabel,
+        description: session.description[0] || '',
+        uniqueKey: 'session::' + session.id
+      }));
+
+      const paperEntries = selectedPaperEntries().map(({ session, item }) => ({
+        kind: 'paper',
+        title: item.title,
+        sessionTitle: session.title,
+        day: session.day,
+        time: session.time || session.timeBlock,
+        track: session.track,
+        room: session.room,
+        sessionLabel: session.sessionLabel,
+        description: (item.lines && item.lines.join('; ')) || '',
+        uniqueKey: 'paper::' + paperKey(session, item)
+      }));
+
+      return [...sessionEntries, ...paperEntries].sort((a, b) => {
+        const keyA = (a.day || '') + '|' + (a.time || '') + '|' + (a.kind || '') + '|' + (a.title || '');
+        const keyB = (b.day || '') + '|' + (b.time || '') + '|' + (b.kind || '') + '|' + (b.title || '');
+        return keyA.localeCompare(keyB);
+      });
+    }
+
+    function parseTimeRange(value) {
+      const match = String(value || '').match(/(\d{2}):(\d{2})-(\d{2}):(\d{2})/);
+      if (!match) return null;
+      const start = Number(match[1]) * 60 + Number(match[2]);
+      const end = Number(match[3]) * 60 + Number(match[4]);
+      return { start, end };
+    }
+
+    function detectConflicts() {
+      const items = selectedAgendaItems().filter(item => parseTimeRange(item.time));
+      const conflicts = [];
+      const seen = new Set();
+      for (let i = 0; i < items.length; i++) {
+        for (let j = i + 1; j < items.length; j++) {
+          const a = items[i];
+          const b = items[j];
+          if (a.day !== b.day) continue;
+          if (a.sessionTitle === b.sessionTitle && a.time === b.time) continue;
+          const ta = parseTimeRange(a.time);
+          const tb = parseTimeRange(b.time);
+          if (!ta || !tb) continue;
+          if (ta.start < tb.end && tb.start < ta.end) {
+            const key = [a.uniqueKey, b.uniqueKey].sort().join('||');
+            if (!seen.has(key)) {
+              seen.add(key);
+              conflicts.push({ day: a.day, time: a.time, items: [a, b] });
+            }
+          }
+        }
+      }
+      return conflicts;
+    }
+
+    function renderSidebar() {
+      const picked = selectedSessions().sort((a, b) => {
+        const keyA = (a.day || '') + '|' + (a.time || '') + '|' + (a.title || '');
+        const keyB = (b.day || '') + '|' + (b.time || '') + '|' + (b.title || '');
+        return keyA.localeCompare(keyB);
+      });
+      const pickedPapers = selectedPaperEntries().sort((a, b) => {
+        const keyA = (a.session.day || '') + '|' + (a.session.time || '') + '|' + a.item.title;
+        const keyB = (b.session.day || '') + '|' + (b.session.time || '') + '|' + b.item.title;
+        return keyA.localeCompare(keyB);
+      });
+
+      els.pickedCount.textContent = picked.length;
+      els.miniPicked.textContent = picked.length + ' / ' + pickedPapers.length;
+      els.pickedDays.textContent = new Set([...picked.map(item => item.day), ...pickedPapers.map(entry => entry.session.day)].filter(Boolean)).size;
+      els.miniTracks.textContent = new Set([...picked.map(item => item.track), ...pickedPapers.map(entry => entry.session.track)].filter(Boolean)).size;
+      renderConflicts();
+      els.myList.innerHTML = '';
+
+      if (!picked.length && !pickedPapers.length) {
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = '还没有选择任何 session 或 paper。';
+        els.myList.appendChild(empty);
+        return;
+      }
+
+      picked.forEach(session => {
+        const item = document.createElement('article');
+        item.className = 'my-item';
+        item.innerHTML =
+          '<h3>' + escapeHtml(session.title) + '</h3>' +
+          '<p>' + escapeHtml([session.day, session.time || session.timeBlock, session.room].filter(Boolean).join(' · ')) + '</p>' +
+          '<p class="tiny">' + escapeHtml([session.track, session.sessionLabel].filter(Boolean).join(' · ')) + '</p>';
+        els.myList.appendChild(item);
+      });
+
+      pickedPapers.forEach(({ session, item }) => {
+        const paper = document.createElement('article');
+        paper.className = 'my-item';
+        paper.innerHTML =
+          '<h3>' + escapeHtml(item.title) + '</h3>' +
+          '<p>' + escapeHtml([session.day, session.time || session.timeBlock, session.room].filter(Boolean).join(' · ')) + '</p>' +
+          '<p class="tiny">' + escapeHtml([session.track, session.sessionLabel].filter(Boolean).join(' · ')) + '</p>' +
+          '<p class="paper">所属 session: ' + escapeHtml(session.title) + '</p>';
+        els.myList.appendChild(paper);
+      });
+    }
+
+    function renderConflicts() {
+      const conflicts = detectConflicts();
+      els.conflictPanel.innerHTML = '';
+      if (!conflicts.length) {
+        const ok = document.createElement('div');
+        ok.className = 'mini-card';
+        ok.innerHTML = '<strong>0</strong><span>当前未检测到时间冲突</span>';
+        els.conflictPanel.appendChild(ok);
+        return;
+      }
+
+      conflicts.forEach(conflict => {
+        const card = document.createElement('div');
+        card.className = 'conflict-card';
+        card.innerHTML =
+          '<h3>时间冲突</h3>' +
+          '<p>' + escapeHtml([conflict.day, conflict.time].filter(Boolean).join(' · ')) + '</p>' +
+          '<ul>' + conflict.items.map(item => '<li>' + escapeHtml((item.kind === 'paper' ? '[Paper] ' : '[Session] ') + item.title + ' | ' + item.sessionTitle + (item.room ? ' | ' + item.room : '')) + '</li>').join('') + '</ul>';
+        els.conflictPanel.appendChild(card);
+      });
+    }
+
+    function toggleSessionSelection(id) {
+      if (state.selectedSessions.has(id)) state.selectedSessions.delete(id);
+      else state.selectedSessions.add(id);
+      persistSelection();
+      render();
+    }
+
+    function togglePaperSelection(session, item) {
+      const key = paperKey(session, item);
+      if (state.selectedPapers.has(key)) state.selectedPapers.delete(key);
+      else state.selectedPapers.add(key);
+      persistSelection();
+      render();
+    }
+
+    function render() {
+      renderContent();
+      renderSidebar();
+      els.selectedOnlyBtn.textContent = state.selectedOnly ? '显示全部' : '只看已选';
+      els.selectedOnlyBtn.classList.toggle('primary-btn', state.selectedOnly);
+      els.selectedOnlyBtn.classList.toggle('soft-btn', !state.selectedOnly);
+      els.paperFocusBtn.textContent = state.paperFocus ? '取消高亮 paper 所在 session' : '高亮已选 paper 所在 session';
+      els.paperFocusBtn.classList.toggle('primary-btn', state.paperFocus);
+      els.paperFocusBtn.classList.toggle('soft-btn', !state.paperFocus);
+    }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function selectionText() {
+      const picked = selectedAgendaItems();
+      const conflicts = detectConflicts();
+      if (!picked.length) return '还没有选择任何 session 或 paper。';
+      const agendaText = picked.map(item => {
+        return [
+          item.kind === 'paper' ? '[Paper]' : '[Session]',
+          item.title,
+          item.kind === 'paper' ? '所属 Session | ' + item.sessionTitle : '',
+          [item.day, item.time].filter(Boolean).join(' | '),
+          [item.track, item.room].filter(Boolean).join(' | '),
+          item.description || ''
+        ].filter(Boolean).join('\n');
+      });
+      const conflictText = conflicts.length ? '\n\n[Conflicts]\n' + conflicts.map(conflict => {
+        return [
+          [conflict.day, conflict.time].filter(Boolean).join(' | '),
+          ...conflict.items.map(item => '- ' + (item.kind === 'paper' ? '[Paper] ' : '[Session] ') + item.title + (item.kind === 'paper' ? ' | Session: ' + item.sessionTitle : ''))
+        ].join('\n');
+      }).join('\n\n') : '';
+      return agendaText.join('\n\n') + conflictText;
+    }
+
+    function buildExportRows() {
+      return selectedAgendaItems().map(item => ({
+        type: item.kind === 'paper' ? 'Paper' : 'Session',
+        title: item.title,
+        session: item.sessionTitle,
+        day: item.day,
+        time: item.time,
+        track: item.track,
+        room: item.room,
+        sessionLabel: item.sessionLabel,
+        note: item.description
+      }));
+    }
+
+    function downloadExcel() {
+      const rows = buildExportRows();
+      if (!rows.length) {
+        alert('请先选择一些 session 或 paper。');
+        return;
+      }
+      const html = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { font-family: Calibri, Arial, sans-serif; }
+            .title { font-size: 22pt; font-weight: 700; color: #0e6b61; }
+            .subtitle { font-size: 11pt; color: #666; }
+            table { border-collapse: collapse; width: 100%; margin-top: 18px; }
+            th { background: #0e6b61; color: #fff; font-weight: 700; padding: 10px; border: 1px solid #cdd8d4; }
+            td { padding: 8px 10px; border: 1px solid #d9e2de; vertical-align: top; }
+            tr:nth-child(even) td { background: #f7faf8; }
+          </style>
+        </head>
+        <body>
+          <div class="title">AIB 2026 Personal Plan</div>
+          <div class="subtitle">Generated from conference-planner.html</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Title</th>
+                <th>Session</th>
+                <th>Day</th>
+                <th>Time</th>
+                <th>Track</th>
+                <th>Room</th>
+                <th>Session Type</th>
+                <th>Note</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(row => `
+                <tr>
+                  <td>${escapeHtml(row.type)}</td>
+                  <td>${escapeHtml(row.title)}</td>
+                  <td>${escapeHtml(row.session)}</td>
+                  <td>${escapeHtml(row.day)}</td>
+                  <td>${escapeHtml(row.time)}</td>
+                  <td>${escapeHtml(row.track)}</td>
+                  <td>${escapeHtml(row.room)}</td>
+                  <td>${escapeHtml(row.sessionLabel)}</td>
+                  <td>${escapeHtml(row.note)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </body>
+        </html>`;
+      const blob = new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'AIB2026-personal-plan.xls';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function buildPrintHtml() {
+      const rows = buildExportRows();
+      const conflicts = detectConflicts();
+      const grouped = new Map();
+      rows.forEach(row => {
+        if (!grouped.has(row.day)) grouped.set(row.day, []);
+        grouped.get(row.day).push(row);
+      });
+
+      return `<!DOCTYPE html>
+      <html lang="zh-CN">
+      <head>
+        <meta charset="UTF-8" />
+        <title>AIB 2026 Personal Plan PDF</title>
+        <style>
+          body { font-family: "Segoe UI", "Microsoft YaHei", sans-serif; color: #20312f; margin: 0; background: #f5f1e8; }
+          .page { width: 900px; margin: 24px auto; background: white; padding: 36px 42px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+          h1 { margin: 0; color: #0e6b61; font-size: 30px; }
+          .sub { color: #5f6f6d; margin-top: 8px; }
+          .day { margin-top: 28px; }
+          .day h2 { margin: 0 0 12px; font-size: 22px; color: #164d47; border-bottom: 2px solid #d9e6e1; padding-bottom: 6px; }
+          .card { border: 1px solid #dfe8e4; border-radius: 18px; padding: 16px 18px; margin-bottom: 14px; background: #fbfcfb; }
+          .type { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #edf6f3; color: #0e6b61; font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+          .title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+          .meta { color: #5f6f6d; font-size: 13px; line-height: 1.65; }
+          .session { margin-top: 8px; color: #8b5e34; font-size: 13px; }
+          .note { margin-top: 10px; color: #354644; font-size: 13px; line-height: 1.65; }
+          .conflicts { margin-top: 28px; }
+          .conflict { border: 1px solid #edcfb6; background: #fff6ee; border-radius: 16px; padding: 14px 16px; margin-bottom: 12px; }
+          .conflict h3 { margin: 0 0 8px; color: #a35d28; font-size: 16px; }
+          .conflict ul { margin: 0; padding-left: 18px; }
+          @media print {
+            body { background: white; }
+            .page { width: auto; margin: 0; box-shadow: none; padding: 20px 24px; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="page">
+          <h1>AIB 2026 Personal Plan</h1>
+          <div class="sub">Exported from your selected sessions and papers</div>
+          ${[...grouped.entries()].map(([day, items]) => `
+            <section class="day">
+              <h2>${escapeHtml(day)}</h2>
+              ${items.map(item => `
+                <div class="card">
+                  <div class="type">${escapeHtml(item.type)}</div>
+                  <div class="title">${escapeHtml(item.title)}</div>
+                  <div class="meta">${escapeHtml([item.time, item.track, item.room].filter(Boolean).join(' · '))}</div>
+                  ${item.type === 'Paper' ? `<div class="session">所属 Session: ${escapeHtml(item.session)}</div>` : ''}
+                  ${item.note ? `<div class="note">${escapeHtml(item.note)}</div>` : ''}
+                </div>
+              `).join('')}
+            </section>
+          `).join('')}
+          <section class="conflicts">
+            <h2>Conflict Check</h2>
+            ${conflicts.length ? conflicts.map(conflict => `
+              <div class="conflict">
+                <h3>${escapeHtml([conflict.day, conflict.time].filter(Boolean).join(' · '))}</h3>
+                <ul>
+                  ${conflict.items.map(item => `<li>${escapeHtml((item.kind === 'paper' ? '[Paper] ' : '[Session] ') + item.title + (item.kind === 'paper' ? ' | Session: ' + item.sessionTitle : ''))}</li>`).join('')}
+                </ul>
+              </div>
+            `).join('') : '<div class="card">No time conflicts detected.</div>'}
+          </section>
+        </div>
+      </body>
+      </html>`;
+    }
+
+    function exportPdf() {
+      const rows = buildExportRows();
+      if (!rows.length) {
+        alert('请先选择一些 session 或 paper。');
+        return;
+      }
+      const win = window.open('', '_blank');
+      if (!win) {
+        alert('无法打开打印窗口，请检查浏览器拦截设置。');
+        return;
+      }
+      win.document.open();
+      win.document.write(buildPrintHtml());
+      win.document.close();
+      win.focus();
+      setTimeout(() => win.print(), 300);
+    }
+
+    fillSelect(els.dayFilter, '全部日期', data.days || []);
+    fillSelect(els.trackFilter, '全部 track', data.tracks || []);
+    fillSelect(els.roomFilter, '全部房间', data.rooms || []);
+    fillSelect(els.timeFilter, '全部时间', timeOptions);
+    fillSelect(els.typeFilter, '全部 session 类型', typeOptions);
+
+    els.searchInput.addEventListener('input', event => { state.search = normalize(event.target.value); render(); });
+    els.dayFilter.addEventListener('change', event => { state.day = event.target.value; render(); });
+    els.trackFilter.addEventListener('change', event => { state.track = event.target.value; render(); });
+    els.roomFilter.addEventListener('change', event => { state.room = event.target.value; render(); });
+    els.timeFilter.addEventListener('change', event => { state.time = event.target.value; render(); });
+    els.typeFilter.addEventListener('change', event => { state.type = event.target.value; render(); });
+    els.selectedOnlyBtn.addEventListener('click', () => { state.selectedOnly = !state.selectedOnly; render(); });
+    els.paperFocusBtn.addEventListener('click', () => { state.paperFocus = !state.paperFocus; render(); });
+    els.resetBtn.addEventListener('click', () => {
+      state.search = '';
+      state.day = '';
+      state.track = '';
+      state.room = '';
+      state.time = '';
+      state.type = '';
+      state.selectedOnly = false;
+      state.paperFocus = false;
+      els.searchInput.value = '';
+      els.dayFilter.value = '';
+      els.trackFilter.value = '';
+      els.roomFilter.value = '';
+      els.timeFilter.value = '';
+      els.typeFilter.value = '';
+      render();
+    });
+    els.copyBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(selectionText());
+        els.copyBtn.textContent = '已复制';
+        setTimeout(() => { els.copyBtn.textContent = '复制我选中的日程'; }, 1200);
+      } catch {
+        alert('复制失败，你可以改用“导出为文本”。');
+      }
+    });
+    els.downloadExcelBtn.addEventListener('click', downloadExcel);
+    els.downloadPdfBtn.addEventListener('click', exportPdf);
+    els.clearBtn.addEventListener('click', () => {
+      state.selectedSessions.clear();
+      state.selectedPapers.clear();
+      persistSelection();
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
