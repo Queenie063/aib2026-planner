@@ -488,13 +488,13 @@
   <div class="shell">
     <main class="main">
       <section class="hero">
-        <h1>AIB 2026 个人参会规划</h1>
-        <p>把原始日程拆成可搜索、可筛选、可勾选的卡片。你可以按日期、主题、房间或关键词筛选，并把想参加的 session 勾出来，页面会自动汇总成你自己的行程表。</p>
+        <h1>AIB 2026 Personal Planner</h1>
+        <p>Turn the original conference program into searchable, filterable, selectable cards. You can filter by date, topic, room, or keyword, select the sessions and papers you want, and automatically build your personal conference plan.</p>
       </section>
 
       <section class="toolbar">
         <div class="search-row">
-          <input id="searchInput" type="search" placeholder="搜关键词、作者、论文题目、session 标题、房间、track" />
+          <input id="searchInput" type="search" placeholder="Search keywords, authors, paper titles, session titles, rooms, or tracks" />
           <select id="dayFilter"></select>
           <select id="trackFilter"></select>
         </div>
@@ -502,15 +502,15 @@
           <select id="roomFilter"></select>
           <select id="timeFilter"></select>
           <select id="typeFilter"></select>
-          <button id="selectedOnlyBtn" class="soft-btn" type="button">只看已选</button>
-          <button id="paperFocusBtn" class="soft-btn" type="button">高亮已选 paper 所在 session</button>
-          <button id="resetBtn" class="soft-btn" type="button">重置筛选</button>
+          <button id="selectedOnlyBtn" class="soft-btn" type="button">Show Selected Only</button>
+          <button id="paperFocusBtn" class="soft-btn" type="button">Highlight Sessions for Selected Papers</button>
+          <button id="resetBtn" class="soft-btn" type="button">Reset Filters</button>
         </div>
         <div class="stats-row">
-          <div class="stat"><span class="label">总场次</span><span id="totalCount" class="value">0</span></div>
-          <div class="stat"><span class="label">当前结果</span><span id="visibleCount" class="value">0</span></div>
-          <div class="stat"><span class="label">已选场次</span><span id="pickedCount" class="value">0</span></div>
-          <div class="stat"><span class="label">涉及日期</span><span id="pickedDays" class="value">0</span></div>
+          <div class="stat"><span class="label">Total Sessions</span><span id="totalCount" class="value">0</span></div>
+          <div class="stat"><span class="label">Visible Results</span><span id="visibleCount" class="value">0</span></div>
+          <div class="stat"><span class="label">Selected Sessions</span><span id="pickedCount" class="value">0</span></div>
+          <div class="stat"><span class="label">Days Covered</span><span id="pickedDays" class="value">0</span></div>
         </div>
       </section>
 
@@ -518,17 +518,17 @@
     </main>
 
     <aside class="sidebar">
-      <h2>我的日程</h2>
-      <p>勾选后的内容会自动保存在当前浏览器本地。下次打开同一个文件，已选结果还在。</p>
+      <h2>My Plan</h2>
+      <p>Your selections are saved locally in this browser. When you open the same file again in the same browser, your saved plan will still be here.</p>
       <div class="mini-stat">
-        <div class="mini-card"><strong id="miniPicked">0</strong><span>已选 session / paper</span></div>
-        <div class="mini-card"><strong id="miniTracks">0</strong><span>涉及 track</span></div>
+        <div class="mini-card"><strong id="miniPicked">0</strong><span>Selected Sessions / Papers</span></div>
+        <div class="mini-card"><strong id="miniTracks">0</strong><span>Tracks Covered</span></div>
       </div>
       <div class="sidebar-actions">
-        <button id="copyBtn" class="primary-btn" type="button">复制我选中的日程</button>
-        <button id="downloadExcelBtn" class="soft-btn" type="button">导出 Excel</button>
-        <button id="downloadPdfBtn" class="soft-btn" type="button">导出 PDF</button>
-        <button id="clearBtn" class="soft-btn" type="button">清空已选</button>
+        <button id="copyBtn" class="primary-btn" type="button">Copy My Plan</button>
+        <button id="downloadExcelBtn" class="soft-btn" type="button">Export Excel</button>
+        <button id="downloadPdfBtn" class="soft-btn" type="button">Export PDF</button>
+        <button id="clearBtn" class="soft-btn" type="button">Clear Selections</button>
       </div>
       <div id="conflictPanel" class="conflict-panel"></div>
       <div id="myList" class="my-list"></div>
@@ -688,7 +688,7 @@
       if (!visible.length) {
         const empty = document.createElement('div');
         empty.className = 'empty';
-        empty.textContent = '没有匹配到结果。可以换个关键词，或者重置筛选。';
+        empty.textContent = 'No matching results. Try a different keyword or reset the filters.';
         els.content.appendChild(empty);
         return;
       }
@@ -699,7 +699,7 @@
 
         const header = document.createElement('div');
         header.className = 'day-header';
-        header.innerHTML = '<h2>' + day + '</h2><span>' + items.length + ' 场</span>';
+        header.innerHTML = '<h2>' + day + '</h2><span>' + items.length + ' sessions</span>';
         section.appendChild(header);
 
         items.forEach(session => {
@@ -895,7 +895,7 @@
       if (!picked.length && !pickedPapers.length) {
         const empty = document.createElement('div');
         empty.className = 'empty';
-        empty.textContent = '还没有选择任何 session 或 paper。';
+        empty.textContent = 'No sessions or papers selected yet.';
         els.myList.appendChild(empty);
         return;
       }
@@ -917,7 +917,7 @@
           '<h3>' + escapeHtml(item.title) + '</h3>' +
           '<p>' + escapeHtml([session.day, session.time || session.timeBlock, session.room].filter(Boolean).join(' · ')) + '</p>' +
           '<p class="tiny">' + escapeHtml([session.track, session.sessionLabel].filter(Boolean).join(' · ')) + '</p>' +
-          '<p class="paper">所属 session: ' + escapeHtml(session.title) + '</p>';
+          '<p class="paper">Parent session: ' + escapeHtml(session.title) + '</p>';
         els.myList.appendChild(paper);
       });
     }
@@ -928,7 +928,7 @@
       if (!conflicts.length) {
         const ok = document.createElement('div');
         ok.className = 'mini-card';
-        ok.innerHTML = '<strong>0</strong><span>当前未检测到时间冲突</span>';
+        ok.innerHTML = '<strong>0</strong><span>No time conflicts detected</span>';
         els.conflictPanel.appendChild(ok);
         return;
       }
@@ -937,7 +937,7 @@
         const card = document.createElement('div');
         card.className = 'conflict-card';
         card.innerHTML =
-          '<h3>时间冲突</h3>' +
+          '<h3>Time Conflict</h3>' +
           '<p>' + escapeHtml([conflict.day, conflict.time].filter(Boolean).join(' · ')) + '</p>' +
           '<ul>' + conflict.items.map(item => '<li>' + escapeHtml((item.kind === 'paper' ? '[Paper] ' : '[Session] ') + item.title + ' | ' + item.sessionTitle + (item.room ? ' | ' + item.room : '')) + '</li>').join('') + '</ul>';
         els.conflictPanel.appendChild(card);
@@ -962,10 +962,10 @@
     function render() {
       renderContent();
       renderSidebar();
-      els.selectedOnlyBtn.textContent = state.selectedOnly ? '显示全部' : '只看已选';
+      els.selectedOnlyBtn.textContent = state.selectedOnly ? 'Show All' : 'Show Selected Only';
       els.selectedOnlyBtn.classList.toggle('primary-btn', state.selectedOnly);
       els.selectedOnlyBtn.classList.toggle('soft-btn', !state.selectedOnly);
-      els.paperFocusBtn.textContent = state.paperFocus ? '取消高亮 paper 所在 session' : '高亮已选 paper 所在 session';
+      els.paperFocusBtn.textContent = state.paperFocus ? 'Turn Off Session Highlighting' : 'Highlight Sessions for Selected Papers';
       els.paperFocusBtn.classList.toggle('primary-btn', state.paperFocus);
       els.paperFocusBtn.classList.toggle('soft-btn', !state.paperFocus);
     }
@@ -982,12 +982,12 @@
     function selectionText() {
       const picked = selectedAgendaItems();
       const conflicts = detectConflicts();
-      if (!picked.length) return '还没有选择任何 session 或 paper。';
+      if (!picked.length) return 'No sessions or papers selected yet.';
       const agendaText = picked.map(item => {
         return [
           item.kind === 'paper' ? '[Paper]' : '[Session]',
           item.title,
-          item.kind === 'paper' ? '所属 Session | ' + item.sessionTitle : '',
+          item.kind === 'paper' ? 'Parent Session | ' + item.sessionTitle : '',
           [item.day, item.time].filter(Boolean).join(' | '),
           [item.track, item.room].filter(Boolean).join(' | '),
           item.description || ''
@@ -1019,7 +1019,7 @@
     function downloadExcel() {
       const rows = buildExportRows();
       if (!rows.length) {
-        alert('请先选择一些 session 或 paper。');
+        alert('Please select at least one session or paper first.');
         return;
       }
       const html = `
@@ -1129,7 +1129,7 @@
                   <div class="type">${escapeHtml(item.type)}</div>
                   <div class="title">${escapeHtml(item.title)}</div>
                   <div class="meta">${escapeHtml([item.time, item.track, item.room].filter(Boolean).join(' · '))}</div>
-                  ${item.type === 'Paper' ? `<div class="session">所属 Session: ${escapeHtml(item.session)}</div>` : ''}
+                  ${item.type === 'Paper' ? `<div class="session">Parent Session: ${escapeHtml(item.session)}</div>` : ''}
                   ${item.note ? `<div class="note">${escapeHtml(item.note)}</div>` : ''}
                 </div>
               `).join('')}
@@ -1154,12 +1154,12 @@
     function exportPdf() {
       const rows = buildExportRows();
       if (!rows.length) {
-        alert('请先选择一些 session 或 paper。');
+        alert('Please select at least one session or paper first.');
         return;
       }
       const win = window.open('', '_blank');
       if (!win) {
-        alert('无法打开打印窗口，请检查浏览器拦截设置。');
+        alert('Unable to open the print window. Please check whether your browser is blocking pop-ups.');
         return;
       }
       win.document.open();
@@ -1169,11 +1169,11 @@
       setTimeout(() => win.print(), 300);
     }
 
-    fillSelect(els.dayFilter, '全部日期', data.days || []);
-    fillSelect(els.trackFilter, '全部 track', data.tracks || []);
-    fillSelect(els.roomFilter, '全部房间', data.rooms || []);
-    fillSelect(els.timeFilter, '全部时间', timeOptions);
-    fillSelect(els.typeFilter, '全部 session 类型', typeOptions);
+    fillSelect(els.dayFilter, 'All Dates', data.days || []);
+    fillSelect(els.trackFilter, 'All Tracks', data.tracks || []);
+    fillSelect(els.roomFilter, 'All Rooms', data.rooms || []);
+    fillSelect(els.timeFilter, 'All Times', timeOptions);
+    fillSelect(els.typeFilter, 'All Session Types', typeOptions);
 
     els.searchInput.addEventListener('input', event => { state.search = normalize(event.target.value); render(); });
     els.dayFilter.addEventListener('change', event => { state.day = event.target.value; render(); });
@@ -1203,10 +1203,10 @@
     els.copyBtn.addEventListener('click', async () => {
       try {
         await navigator.clipboard.writeText(selectionText());
-        els.copyBtn.textContent = '已复制';
-        setTimeout(() => { els.copyBtn.textContent = '复制我选中的日程'; }, 1200);
+        els.copyBtn.textContent = 'Copied';
+        setTimeout(() => { els.copyBtn.textContent = 'Copy My Plan'; }, 1200);
       } catch {
-        alert('复制失败，你可以改用“导出为文本”。');
+        alert('Copy failed. Please use Excel or PDF export instead.');
       }
     });
     els.downloadExcelBtn.addEventListener('click', downloadExcel);
