@@ -1,6 +1,6 @@
-# AIB 2026 Personal Planner
+# AIB 2026 Conference Planner
 
-A static web app built from the AIB 2026 conference program. It helps attendees browse the program, select sessions and papers, detect schedule conflicts, and export a personal plan.
+A static web app built from the AIB 2026 conference program. It helps attendees browse the program, select sessions and papers, detect schedule conflicts, and export a personal conference plan.
 
 ## Features
 
