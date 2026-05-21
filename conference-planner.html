@@ -580,6 +580,7 @@
     };
 
     const sessions = data.sessions || [];
+    const dayOrder = new Map((data.days || []).map((day, index) => [day, index]));
     const timeOptions = [...new Set(sessions.map(s => s.time).filter(Boolean))].sort();
     const typeOptions = [...new Set(sessions.map(s => s.sessionLabel).filter(Boolean))].sort();
 
@@ -833,11 +834,7 @@
         uniqueKey: 'paper::' + paperKey(session, item)
       }));
 
-      return [...sessionEntries, ...paperEntries].sort((a, b) => {
-        const keyA = (a.day || '') + '|' + (a.time || '') + '|' + (a.kind || '') + '|' + (a.title || '');
-        const keyB = (b.day || '') + '|' + (b.time || '') + '|' + (b.kind || '') + '|' + (b.title || '');
-        return keyA.localeCompare(keyB);
-      });
+      return [...sessionEntries, ...paperEntries].sort(compareAgendaEntries);
     }
 
     function parseTimeRange(value) {
@@ -846,6 +843,28 @@
       const start = Number(match[1]) * 60 + Number(match[2]);
       const end = Number(match[3]) * 60 + Number(match[4]);
       return { start, end };
+    }
+
+    function compareAgendaEntries(a, b) {
+      const dayA = dayOrder.has(a.day) ? dayOrder.get(a.day) : Number.MAX_SAFE_INTEGER;
+      const dayB = dayOrder.has(b.day) ? dayOrder.get(b.day) : Number.MAX_SAFE_INTEGER;
+      if (dayA !== dayB) return dayA - dayB;
+
+      const timeA = parseTimeRange(a.time);
+      const timeB = parseTimeRange(b.time);
+      const startA = timeA ? timeA.start : Number.MAX_SAFE_INTEGER;
+      const startB = timeB ? timeB.start : Number.MAX_SAFE_INTEGER;
+      if (startA !== startB) return startA - startB;
+
+      const endA = timeA ? timeA.end : Number.MAX_SAFE_INTEGER;
+      const endB = timeB ? timeB.end : Number.MAX_SAFE_INTEGER;
+      if (endA !== endB) return endA - endB;
+
+      const kindA = a.kind || a.type || '';
+      const kindB = b.kind || b.type || '';
+      if (kindA !== kindB) return kindA.localeCompare(kindB);
+
+      return (a.title || '').localeCompare(b.title || '');
     }
 
     function detectConflicts() {
@@ -874,16 +893,14 @@
     }
 
     function renderSidebar() {
-      const picked = selectedSessions().sort((a, b) => {
-        const keyA = (a.day || '') + '|' + (a.time || '') + '|' + (a.title || '');
-        const keyB = (b.day || '') + '|' + (b.time || '') + '|' + (b.title || '');
-        return keyA.localeCompare(keyB);
-      });
-      const pickedPapers = selectedPaperEntries().sort((a, b) => {
-        const keyA = (a.session.day || '') + '|' + (a.session.time || '') + '|' + a.item.title;
-        const keyB = (b.session.day || '') + '|' + (b.session.time || '') + '|' + b.item.title;
-        return keyA.localeCompare(keyB);
-      });
+      const picked = selectedSessions().sort((a, b) => compareAgendaEntries(
+        { day: a.day, time: a.time || a.timeBlock, kind: 'session', title: a.title },
+        { day: b.day, time: b.time || b.timeBlock, kind: 'session', title: b.title }
+      ));
+      const pickedPapers = selectedPaperEntries().sort((a, b) => compareAgendaEntries(
+        { day: a.session.day, time: a.session.time || a.session.timeBlock, kind: 'paper', title: a.item.title },
+        { day: b.session.day, time: b.session.time || b.session.timeBlock, kind: 'paper', title: b.item.title }
+      ));
 
       els.pickedCount.textContent = picked.length;
       els.miniPicked.textContent = picked.length + ' / ' + pickedPapers.length;
